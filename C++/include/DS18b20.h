@@ -98,6 +98,12 @@ public:
     bool readTempBlocking(float* temp);
 
     /**
+	 * @brief Returns maximum conversion time in ms depending on selected resolution.
+	 *
+	 */
+	uint16_t getConvertingTime();
+
+    /**
      * @brief Wait maximum conversion time depending on selected resolution.
      *
      * WARNING:

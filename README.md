@@ -39,29 +39,31 @@ Lightweight, hardware-agnostic **OneWire bit-banging driver** and **DS18B20 temp
 You must implement 4 low-level functions:
 
 ```cpp
-// GPIO line to low level
+// Drive the GPIO line to a low level
 void lowLine() {
-    // as example
+    // Example implementation
     GPIOA->BSRR = ONEWIRE_PIN << 16;
 }
 
-// GPIO line to Z-state (HIGH via pull-up)
+// Release the GPIO line (set to high-impedance state).
+// The line will be pulled high by an external pull-up resistor.
 void releaseLine() {
-    // as example
-    GPIOA->BSRR = ONEWIRE_PIN; // release (HIGH via pull-up)
+    // Example implementation
+    GPIOA->BSRR = ONEWIRE_PIN;
 }
 
-// read the GPIO line level.
-// It must be 0 if line has low level
-// It must be any non-zero value if line has high level
+// Read the current GPIO line level.
+// Returns 0 if the line is low.
+// Returns a non-zero value if the line is high.
 uint8_t readLine() {
-    // as example
+    // Example implementation
     return GPIOA->IDR & ONEWIRE_PIN;
 }
 
-// just delay with us. 10 bit assumed at least.
+// Delay for the specified number of microseconds.
+// Assumes the timer has at least 10-bit resolution.
 void delayUs(uint16_t us) {
-    // as example
+    // Example implementation
     __HAL_TIM_SET_COUNTER(&htim11, 0);
     HAL_TIM_Base_Start(&htim11);
     while (__HAL_TIM_GET_COUNTER(&htim11) < us) {}
@@ -110,11 +112,15 @@ if (sensor.readTempBlocking(&temp)) {
 
 ```cpp
 sensor.convertTemp();
+uint32_t timemark = sensor.getConvertingTime() + timeInMillisExample();
 
 // do something ...
 
-float temp;
-sensor.readTemp(&temp);
+if (timeInMillisExample() > timemark) {
+    // The data are ready
+    float temp;
+    sensor.readTemp(&temp);
+}
 ```
 
 ---
@@ -123,10 +129,10 @@ sensor.readTemp(&temp);
 
 | Resolution | Max Conversion Time |
 | ---------- |---------------------|
-| 9-bit      | <94 ms              |
-| 10-bit     | <188 ms             |
-| 11-bit     | <375 ms             |
-| 12-bit     | <750 ms             |
+| 9-bit      | < 94 ms             |
+| 10-bit     | < 188 ms            |
+| 11-bit     | < 375 ms            |
+| 12-bit     | < 750 ms            |
 
 Set resolution:
 
@@ -136,16 +142,6 @@ sensor.setResolution(DS18b20Resolution::Bits12);
 
 ---
 
-## 🔐 CRC Protection
-
-Library uses Dallas/Maxim CRC-8 to validate data:
-
-* Scratchpad (9 bytes)
-* Automatically checked in `readTemp()`
-
-If CRC fails → function returns `false`.
-
----
 
 ## ⚠️ Important Notes
 
@@ -170,17 +166,6 @@ OneWire protocol is timing-critical:
 
 ---
 
-### 🧵 Blocking Behavior
-
-* `delayMs()` is busy-wait
-* `readTempBlocking()` blocks CPU up to **750 ms**
-
-For RTOS or complex systems:
-
-* prefer non-blocking approach
-
----
-
 ## 📌 Limitations
 
 * No ROM search implementation
@@ -191,5 +176,6 @@ For RTOS or complex systems:
 
 ## 🔧 Possible Improvements
 
-* [ ] ROM search algorithm
+* [ ] Add ROM search algorithm
 * [ ] Add EEPROM save
+* [ ] Add parasite power handling

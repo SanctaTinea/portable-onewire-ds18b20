@@ -64,24 +64,17 @@ bool DS18b20::readTemp(float* temp) {
     return true;
 }
 
+uint16_t DS18b20::getConvertingTime() {
+	switch (resolution) {
+		case DS18b20Resolution::Bits9: return 94;
+		case DS18b20Resolution::Bits10: return 188;
+		case DS18b20Resolution::Bits11: return 375;
+		case DS18b20Resolution::Bits12: return 750;
+	}
+}
+
 void DS18b20::waitForConverting() {
-    switch (resolution) {
-        case DS18b20Resolution::Bits9:
-            oneWire.delayMs(94);
-            break;
-
-        case DS18b20Resolution::Bits10:
-            oneWire.delayMs(188);
-            break;
-
-        case DS18b20Resolution::Bits11:
-            oneWire.delayMs(375);
-            break;
-
-        case DS18b20Resolution::Bits12:
-            oneWire.delayMs(750);
-            break;
-    }
+	oneWire.delayMs(getConvertingTime());
 }
 
 bool DS18b20::readTempBlocking(float* temp) {
