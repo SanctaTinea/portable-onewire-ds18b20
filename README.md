@@ -39,6 +39,8 @@ Lightweight, hardware-agnostic **OneWire bit-banging driver** and **DS18B20 temp
 You must implement 4 low-level functions:
 
 ```cpp
+// Both C and C++
+
 // Drive the GPIO line to a low level
 void lowLine() {
     // Example implementation
@@ -75,7 +77,12 @@ void delayUs(uint16_t us) {
 ### 2. Create OneWire instance
 
 ```cpp
+// C++
 OneWire ow(lowLine, releaseLine, readLine, delayUs);
+
+// C
+OneWire ow;
+onewire_init(&ow, lowLine, releaseLine, readLine, delayUs);
 ```
 
 ---
@@ -85,14 +92,25 @@ OneWire ow(lowLine, releaseLine, readLine, delayUs);
 #### Single device on bus:
 
 ```cpp
+// C++
 DS18b20 sensor(ow);
+
+// C
+DS18b20 ds;
+ds18b20_init(&ds, &ow);
 ```
 
 #### Multiple devices (with ROM):
 
 ```cpp
-uint8_t rom_1[8] = { /* device ROM */ };
-DS18b20 sensor_1(ow, rom_1);
+// C++
+uint8_t DS_ROM_1[8] = { /* device ROM */ };
+DS18b20 sensor_1(ow, DS_ROM_1);
+
+// C
+uint8_t DS_ROM_1[8] = { /* device ROM */ };
+DS18b20 ds1;
+ds18b20_init_with_rom(&ds1, &ow, DS_ROM_1);
 ```
 
 ---
@@ -102,16 +120,25 @@ DS18b20 sensor_1(ow, rom_1);
 #### Blocking mode:
 
 ```cpp
+// C++
 float temp;
 if (sensor.readTempBlocking(&temp)) {
     // temp contains value in °C
+}
+
+// C
+float temp;
+if (ds18b20_read_temp_blocking(&ds, &temp)) {
+  // temp contains value in °C
 }
 ```
 
 #### Non-blocking mode:
 
 ```cpp
-sensor.convertTemp();
+sensor.convertTemp();      // C++
+ds18b20_convert_temp(&ds); // C
+
 uint32_t timemark = sensor.getConvertingTime() + timeInMillisExample();
 
 // do something ...
@@ -119,7 +146,9 @@ uint32_t timemark = sensor.getConvertingTime() + timeInMillisExample();
 if (timeInMillisExample() > timemark) {
     // The data are ready
     float temp;
-    sensor.readTemp(&temp);
+    
+    if (!sensor.readTemp(&temp)) { doSomething() };        // C++
+    if (!ds18b20_read_temp(&ds, &temp)) { doSomething() }; // C
 }
 ```
 
