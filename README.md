@@ -123,6 +123,8 @@ if (timeInMillisExample() > timemark) {
 }
 ```
 
+You can look at the examples in the `examples/` directory.
+
 ---
 
 ## 🌡️ Resolution & Timing
